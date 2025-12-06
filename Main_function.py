@@ -3,6 +3,7 @@ from sklearn import datasets
 from Dataset import Dataset
 from Regression import regression
 from results import results
+from scipy.stats import norm
 
 '''Après avoir défini toute la structure et les classes d'objets, 
 nous allons écrire une fonction qui exécute l’ensemble du processus 
@@ -26,19 +27,19 @@ def preparer_dataset(T, V, feature_names):
     return data_1, df
 
 
-def faire_regression(data_1):
-    res_regression = regression(data_1.X, data_1.Y, data_1.features_names)
+def faire_regression(data):
+    res_regression = regression(data.X, data.Y, data.features_names)
     Beta = res_regression.coefficients
     return res_regression, Beta
 
 
-def coeff_en_dict(data_1, Beta):
-    dict_coeff = {data_1.features_names[i]: Beta[i] for i in range(len(data_1.features_names))}
+def coeff_en_dict(data, Beta):
+    dict_coeff = {data.features_names[i]: Beta[i] for i in range(len(data.features_names))}
     return dict_coeff
 
 
-def analyser_resultats(data_1, df, Beta):
-    res = results(data_1.X, data_1.Y, df, Beta)
+def analyser_resultats(data, df, Beta):
+    res = results(data.X, data.Y, df, Beta)
     res.predict()
     res.metriques()
     df_extended = res.extend_df()
@@ -54,39 +55,37 @@ def Fonction_regression():
     T, V, feature_names = generer_donnees()
 
     # Dataset
-    data_1, df = preparer_dataset(T, V, feature_names)
+    data, df = preparer_dataset(T, V, feature_names)
     print(df)
 
     # Régression
-    res_regression, Beta = faire_regression(data_1)
+    res_regression, Beta = faire_regression(data)
     print("dataclass contenant les coefficients :", res_regression)
 
     # Dictionnaire
-    dict_coeff = coeff_en_dict(data_1, Beta)
+    dict_coeff = coeff_en_dict(data, Beta)
     print("Dictionnaire des coefficients : ", dict_coeff)
 
     # Résultats et métriques
-    resultats, df_extended = analyser_resultats(data_1, df, Beta)
+    resultats, df_extended = analyser_resultats(data, df, Beta)
 
     print("Extended DataFrame :\n", df_extended.head())
 
     # Faire un résumé statistique
-    X = data_1.X
-    Y = data_1.Y
+    X = data.X
+    Y = data.Y
     n, p = X.shape
 
 
-    SCR = np.sum(resultats.erreurs ** 2)
-    sigma2 = SCR / (n - p)
+     # Variance-covariance de Beta
+    sigma2 = resultats.SCR / (n - p)
 
-    # Variance-covariance de Beta
     XtX = np.dot(X.T, X)
     XtX_inv = np.linalg.inv(XtX)
     var_beta = sigma2 * XtX_inv
     std_beta = np.sqrt(np.diag(var_beta))
 
     # stat de student et p-values
-    from scipy.stats import norm
     t = Beta.flatten() / std_beta
     p_values = 2 * (1 - norm.cdf(np.abs(t)))
 
@@ -95,13 +94,15 @@ def Fonction_regression():
     print(f"Nombre d'observations : {n}")
     print(f"Nombre de variables   : {p}")
     print(f"R²                    : {resultats.R2:.4f}")
+    print(f"SCR                   : {resultats.SCR:.4f}")
+    print(f"MSE                  : {resultats.MSE:.4f}")
     print(f"RMSE                  : {resultats.RMSE:.4f}")
     print("==================================================")
 
     print(f"{'Variable':<15} {'Coef':>12} {'Std Err':>12} {'t_stat':>10} {'P>|t|':>10}")
     print("-" * 70)
 
-    for i, nom in enumerate(data_1.features_names):
+    for i, nom in enumerate(data.features_names):
         row = f"{nom:<15} {Beta[i]:12.4f} {std_beta[i]:12.4f} {t[i]:10.3f} {p_values[i]:10.3f}"
         print(row)
 

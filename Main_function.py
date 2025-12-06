@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn import datasets
 from Dataset import Dataset
-from Regression2 import regression
+from Regression import regression
 from results import results
 
 '''Après avoir défini toute la structure et les classes d'objets, 

@@ -15,6 +15,7 @@ class results:
         self.R2 = None
         self.RMSE = None
         self.MSE = None
+        self.SCR=None
 
 
 
@@ -31,10 +32,11 @@ class results:
         """
         ybar = np.mean(self.Y)
         SCT = np.sum((self.Y - ybar) ** 2)
-        SCR = np.sum(self.erreurs ** 2)
-        self.R2 = (SCT - SCR) / SCT
-        self.MSE = SCR/len(self.Y)
+        self.SCR = np.sum(self.erreurs ** 2)
+        self.R2 = (SCT - self.SCR) / SCT
+        self.MSE = self.SCR/len(self.Y)
         self.RMSE = np.sqrt(self.MSE)
+
 
 
     def extend_df(self):
